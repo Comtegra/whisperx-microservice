@@ -1,0 +1,37 @@
+FFmpeg Microservice has been deployed!
+
+1. Get the application URL:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else if eq .Values.service.type "NodePort" }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "ffmpeg-microservice.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.service.type "LoadBalancer" }}
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "ffmpeg-microservice.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "ffmpeg-microservice.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  echo http://127.0.0.1:{{ .Values.service.port }}
+{{- end }}
+
+2. Health check:
+  curl http://<SERVICE_URL>/health
+
+3. Test transcription:
+  curl -X POST http://<SERVICE_URL>/transcribe \
+    -H "Authorization: Bearer <APP_TOKEN>" \
+    -F "file=@audio.mp3"
+
+NOTE: The service may take up to 5 minutes to become ready while loading ML models.
+{{- if not .Values.secrets.existingSecret }}
+{{- if or (not .Values.secrets.hfToken) (not .Values.secrets.appToken) }}
+
+WARNING: You have not set secrets.hfToken and/or secrets.appToken.
+  Speaker diarization requires a valid HuggingFace token.
+  Set them via:
+    helm upgrade {{ .Release.Name }} . --set secrets.hfToken=<token> --set secrets.appToken=<token>
+{{- end }}
+{{- end }}

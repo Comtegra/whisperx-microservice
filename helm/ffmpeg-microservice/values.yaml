@@ -1,0 +1,80 @@
+replicaCount: 1
+
+image:
+  repository: ffmpeg-microservice
+  tag: "3.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Secrets (HF_TOKEN and APP_TOKEN)
+# Set values here or use existingSecret to reference a pre-created Secret
+secrets:
+  hfToken: ""
+  appToken: ""
+  existingSecret: ""
+
+# Application config (mapped to env vars in ConfigMap)
+config:
+  enableAuth: true
+  host: "0.0.0.0"
+  port: 8000
+  apiPrefix: "/"
+  useGpu: true
+  gpuDevice: 0
+  whisperModel: "large-v3"
+  whisperLanguage: "auto"
+  whisperComputeType: "float16"
+  whisperBatchSize: 16
+  whisperBeamSize: 5
+  whisperTemperature: "0.0"
+  whisperInitialPrompt: ""
+  whisperEnableAlignment: true
+  pyannoteModel: "pyannote/speaker-diarization-3.1"
+  maxFileSizeMb: 2048
+  tempDir: "/tmp"
+
+# Gunicorn settings
+gunicorn:
+  workers: 2
+  threads: 1
+  timeout: 1800
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    memory: 16Gi
+    cpu: 8
+  requests:
+    memory: 8Gi
+    cpu: 2
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+persistence:
+  enabled: false
+  size: 20Gi
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+
+serviceAccount:
+  create: false
+  name: ""
+  annotations: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+runtimeClassName: ""

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ffmpeg-microservice.fullname" . }}
+  labels:
+    {{- include "ffmpeg-microservice.labels" . | nindent 4 }}
+data:
+  ENABLE_AUTH: {{ .Values.config.enableAuth | quote }}
+  HOST: {{ .Values.config.host | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  API_PREFIX: {{ .Values.config.apiPrefix | quote }}
+  USE_GPU: {{ .Values.config.useGpu | quote }}
+  GPU_DEVICE: {{ .Values.config.gpuDevice | quote }}
+  WHISPER_MODEL: {{ .Values.config.whisperModel | quote }}
+  WHISPER_LANGUAGE: {{ .Values.config.whisperLanguage | quote }}
+  WHISPER_COMPUTE_TYPE: {{ .Values.config.whisperComputeType | quote }}
+  WHISPER_BATCH_SIZE: {{ .Values.config.whisperBatchSize | quote }}
+  WHISPER_BEAM_SIZE: {{ .Values.config.whisperBeamSize | quote }}
+  WHISPER_TEMPERATURE: {{ .Values.config.whisperTemperature | quote }}
+  WHISPER_INITIAL_PROMPT: {{ .Values.config.whisperInitialPrompt | quote }}
+  WHISPER_ENABLE_ALIGNMENT: {{ .Values.config.whisperEnableAlignment | quote }}
+  PYANNOTE_MODEL: {{ .Values.config.pyannoteModel | quote }}
+  MAX_FILE_SIZE_MB: {{ .Values.config.maxFileSizeMb | quote }}
+  TEMP_DIR: {{ .Values.config.tempDir | quote }}
