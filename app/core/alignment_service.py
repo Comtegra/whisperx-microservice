@@ -434,40 +434,23 @@ class AlignmentService:
                 enable_alignment=True,  # Force alignment on for accurate timestamps
             )
 
-            # Transcribe both channels in parallel
-            left_result: Optional[TranscriptionResult] = None
-            right_result: Optional[TranscriptionResult] = None
+            # Transcribe channels sequentially to avoid thread-safety issues
+            # with shared WhisperX/CTranslate2 model (not safe for concurrent access)
+            logger.info("Transcribing left channel...")
+            try:
+                left_result = whisper_service.transcribe_file(left_path)
+                logger.info("Left channel transcription completed")
+            except Exception as e:
+                logger.error(f"left channel transcription failed: {e}")
+                raise RuntimeError(f"left channel transcription failed: {e}")
 
-            logger.info("Transcribing stereo channels in parallel...")
-
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                futures = {
-                    executor.submit(
-                        whisper_service.transcribe_file, left_path
-                    ): "left",
-                    executor.submit(
-                        whisper_service.transcribe_file, right_path
-                    ): "right",
-                }
-
-                for future in as_completed(futures):
-                    channel = futures[future]
-                    try:
-                        result = future.result()
-                        if channel == "left":
-                            left_result = result
-                            logger.info("Left channel transcription completed")
-                        else:
-                            right_result = result
-                            logger.info("Right channel transcription completed")
-                    except Exception as e:
-                        logger.error(f"{channel} channel transcription failed: {e}")
-                        raise RuntimeError(
-                            f"{channel} channel transcription failed: {e}"
-                        )
-
-            if not left_result or not right_result:
-                raise RuntimeError("Failed to transcribe one or both channels")
+            logger.info("Transcribing right channel...")
+            try:
+                right_result = whisper_service.transcribe_file(right_path)
+                logger.info("Right channel transcription completed")
+            except Exception as e:
+                logger.error(f"right channel transcription failed: {e}")
+                raise RuntimeError(f"right channel transcription failed: {e}")
 
             # Combine segments with speaker labels
             all_segments: List[DiarizedSegment] = []

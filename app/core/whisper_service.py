@@ -365,7 +365,7 @@ class WhisperService:
                 **transcribe_params,
             )
 
-            detected_language = result.get("language", transcribe_language or "unknown")
+            detected_language = result.get("language") or transcribe_language or "unknown"
             logger.info(f"Detected language: {detected_language}")
 
             if self.enable_alignment and detected_language:
@@ -453,7 +453,7 @@ class WhisperService:
                 **transcribe_params,
             )
 
-            detected_language = result.get("language", transcribe_language or "unknown")
+            detected_language = result.get("language") or transcribe_language or "unknown"
 
             if self.enable_alignment and detected_language:
                 try:
